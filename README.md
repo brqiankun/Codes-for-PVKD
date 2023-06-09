@@ -215,3 +215,12 @@ If you use the codes, please consider citing the following publications:
 
 ## Acknowledgements
 This repo is built upon the awesome [Cylinder3D](https://github.com/xinge008/Cylinder3D).
+
+蒸馏(distillation)
+从大模型**蒸馏**会产生较差效果，由于点云自身的稀疏性，随机性和可变密度.
+Point-to-Voxel-Knowledge Distillation 点云到体素知识蒸馏
+从点云级别和体素级别转移权重
+1. 逐点和体素输出蒸馏来补充稀疏监督信号。
+2. 将点云划分为超体素，对不频繁的类和远处的物体的超体素增加采样。
+3. 点间和体素间的**亲和力**蒸馏
+实现2倍加速Cylinder3D模型， 75% MACs(Multiply-Accumulate-Operations, 乘加累积操作数)减少
