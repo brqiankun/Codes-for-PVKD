@@ -216,11 +216,47 @@ If you use the codes, please consider citing the following publications:
 ## Acknowledgements
 This repo is built upon the awesome [Cylinder3D](https://github.com/xinge008/Cylinder3D).
 
-蒸馏(distillation)
-从大模型**蒸馏**会产生较差效果，由于点云自身的稀疏性，随机性和可变密度.
-Point-to-Voxel-Knowledge Distillation 点云到体素知识蒸馏
+## 蒸馏(distillation)
+从大模型**蒸馏**会产生较差效果，由于点云自身的稀疏性sparsity，随机性randomness和可变密度varying density.
+### Point-to-Voxel-Knowledge Distillation 点云到体素知识蒸馏
 从点云级别和体素级别转移权重
-1. 逐点和体素输出蒸馏来补充稀疏监督信号。
+1. 从点级和体素级两方面输出蒸馏来补充稀疏监督信号。
 2. 将点云划分为超体素，对不频繁的类和远处的物体的超体素增加采样。
 3. 点间和体素间的**亲和力**蒸馏
+
 实现2倍加速Cylinder3D模型， 75% MACs(Multiply-Accumulate-Operations, 乘加累积操作数)减少
+
+- FLOPS(Floating Point Operations Per Second) 每秒浮点运算次数
+- FLOPs(Floating Point Operations) 浮点运算次数，衡量模型的计算复杂度
+- MACs(Multiply-Accumulate Operations)乘加累积操作数，包含一个乘法一个加法，大约为2FLOPs
+
+Point-to-Voxel Knowledge Distillation(PVD)
+1. pointwise output 包含 fine-grained perceptual information
+2. voxelwise prediction embraces coarse but richer clues about the surrounding environment
+
+### 点级和体素级的亲和力知识(通过点特征和体素特征的成对语义相似性获得)
+**亲和力矩阵**
+
+划分固定数量的超体素(supervoxel), 只对K个超体素进行采样和蒸馏
+不同的类别，不同的感知距离，提出了difficulty-aware sampling strategy来对少数类和远距离物体增加采样。
+
+对Cylinder3D进行蒸馏，模型压缩，性能得到提升。
+
+#### Knowledge distillation(KD)
+
+传统蒸馏方案在2D分割上表现良好
+PVD是首个在Lidar分割上进行蒸馏的方案，可以用于各种模型。
+
+给定点云X:[N, 3]  当前方案使用CNN进行端到端预测
+现有传统的针对2D图像分割的蒸馏方案比较成熟。
+
+### Framework overview of Cylinder3D
+1. 对输入的点云使用堆叠的MLP生成点云特征[N, Cf]   Cf是点云特征的维度
+2. 对点云特征[N, Cf]按照Cylinder进行重新划分
+3. 属于同一体素的特征通过maxpooling操作被聚合在一起，获得体素特征[M, Cf] M是非空的体素数量
+4. 将体素特征送入asymmetrical 3D convolution networks(非对称3D卷积网络)，生成体素级输出[R, A, H, C]
+5. 逐点细化模块进一步生成点级的预测[N, C] <br>
+N, C, R, A, H分别是点云中点的数量，点的分类类别，半径，角度，高度
+6. 之后使用argmax，得到每个点的分类结果
+
+
